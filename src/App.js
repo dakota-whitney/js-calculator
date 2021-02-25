@@ -79,23 +79,35 @@ class App extends React.Component {
   else if(buttonClicked.hasOwnProperty("Number")) {
 
   console.log(`${buttonClicked.Id} was clicked`) //Log button ID
+
+  //If currentInput is at initialized state
+  if(startingZero.test(this.state.currentInput)){
+    this.setState({
+      currentInput: [buttonClicked.Display],
+      inputQueue: [buttonClicked.Display]
+    })
+  }
   
-  //If inputQueue starts with a zero OR currentInput ends with an operator start new number
-  if(endingOperator.test(this.state.inputQueue.join("")) || startingZero.test(this.state.currentInput.join(""))){
-  this.setState({
-    currentInput: [buttonClicked.Display],
-  })
+  //Else if inputQueue ends with an operator
+  else if(endingOperator.test(this.state.inputQueue.join(""))){
+    if(buttonClicked.Id !== 'zero'){
+      this.setState(state => ({
+        currentInput: [buttonClicked.Display],
+        inputQueue: [...state.inputQueue, buttonClicked.Display]
+      }))
+    }
 }
   //Else append to current number
   else {
   this.setState(state => ({
     currentInput: [...state.currentInput, buttonClicked.Display],
+    inputQueue: [...state.inputQueue, buttonClicked.Display]
   }))
 }
-  this.setState(state => ({
-    inputQueue: [...state.inputQueue, buttonClicked.Display],
-    style: activeStyle
-  }))
+
+/*this.setState(state => ({
+  inputQueue: [...state.inputQueue, buttonClicked.Display]
+}))*/
   this.setState(state => {
     console.log(`The current input is ${state.currentInput.join("")}`)
   })
@@ -130,29 +142,17 @@ else {
     console.log(`Current operator is ${state.currentOperator}`);
   })
 
-  if(operatorsWithNegative.test(this.state.inputQueue)){
-    this.setState(state => ({
-      inputQueue: state.inputQueue.slice(0,state.inputQueue.length - 1),
-      currentOperator: buttonClicked.Display
-    }))
-  } else {
-    this.runCalculation();
-  }
+  this.runCalculation();
 
   //Append operator to inputQueue and display the current result
   this.setState(state => ({
     currentOperator: buttonClicked.Display,
     inputQueue: [...state.inputQueue, buttonClicked.Display],
     currentInput: [state.result],
-    style: activeStyle
   }))
-  setTimeout(() => this.setState({
-    style: inactiveStyle
-  }),100)
 }
 }
 runCalculation(){
-
 //On first run set result equal to currentInput
   if(this.state.result === ""){
     this.setState(state => ({
