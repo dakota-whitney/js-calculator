@@ -57,20 +57,25 @@ class App extends React.Component {
   
   //If a number or decimal is clicked
   else if(buttonClicked.hasOwnProperty("Number") || buttonClicked.Id === "decimal") {
-  console.log(`${buttonClicked.Id} was clicked`)
+
+  console.log(`${buttonClicked.Id} was clicked`) //Log button ID
+  
+  //If inputQueue ends with an operator start new number
   if(endingOperator.test(this.state.inputQueue)){
-  this.setState(state => ({
-    inputQueue: [...state.inputQueue, buttonClicked.Display],
+  this.setState({
     currentInput: [buttonClicked.Display],
-    style: activeStyle,
-  }))
-} else {
+  })
+}
+  //Else append to current number
+  else {
   this.setState(state => ({
-    inputQueue: [...state.inputQueue, buttonClicked.Display],
     currentInput: [...state.currentInput, buttonClicked.Display],
-    style: activeStyle
   }))
 }
+  this.setState(state => ({
+    inputQueue: [...state.inputQueue, buttonClicked.Display],
+    style: activeStyle
+  }))
   setTimeout(() => this.setState({
     style: inactiveStyle
   }),100)
@@ -96,7 +101,10 @@ else if(buttonClicked.Id === "equals"){
 
 //If an operator is clicked
 else {
+
   this.runCalculation();
+
+  //Append operator to inputQueue and display the current result
   this.setState(state => ({
     currentOperator: buttonClicked.Display,
     inputQueue: [...state.inputQueue, buttonClicked.Display],
@@ -113,14 +121,15 @@ else {
 }
 }
 runCalculation(){
-//On first run
+
+//On first run set result equal to currentInput
   if(this.state.result === ""){
     this.setState(state => ({
       result: parseFloat(state.currentInput.join("")),
     }))
   }
   
-//If there was a previous calculation
+//If there was a previous calculation, perform corresponding operation
   else {
     if(this.state.currentOperator === "+"){
       this.setState(state => ({
