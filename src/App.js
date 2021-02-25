@@ -5,7 +5,7 @@ class App extends React.Component {
   constructor(props){
     super(props)
     this.state = {
-      currentInput: [],
+      currentInput: [0],
       inputQueue: [],
       currentOperator: "",
       result: "",
@@ -15,6 +15,7 @@ class App extends React.Component {
     this.handleClick = this.handleClick.bind(this)
     this.handleKeydown = this.handleKeydown.bind(this)
     this.runCalculation = this.runCalculation.bind(this)
+    this.toggleBtnStyle = this.toggleBtnStyle.bind(this)
   }
   componentDidMount(){
     const fccScript = document.createElement("script");
@@ -29,10 +30,30 @@ class App extends React.Component {
   handleKeydown(e){
     console.log(e.code)
   }
+  toggleBtnStyle(buttonId){
+  if(buttonId === "clear"){
+    this.setState({
+      style: clearActiveStyle
+    })
+    setTimeout(() => this.setState({
+      style: clearInactiveStyle
+    }),100)
+  } else {
+    this.setState({
+      style: activeStyle
+    })
+    setTimeout(() => this.setState({
+      style: inactiveStyle
+    }),100)
+  }
+  }
   handleClick(e){
-  const endingOperator = /(\+|\-|\*|\/)$/gi;
+  const endingOperator = /(\+|\-|\*|\/)$/gm;
+  const operatorsWithNegative = /(\+|\-\-+|\*|\/)/gm;
+  const startingZero = /^0/gm;
+  const multDecimals = /\./gm;
 
-  //Set active button for style condition in "Interface" component
+  //Set active button for style condition in Interface component
   this.setState({
     activeButton: e.target.id,
   })
@@ -40,28 +61,27 @@ class App extends React.Component {
   //Find index of button clicked in Button Data object
   let buttonClicked = buttonData[buttonData.findIndex(button => button.Id === e.target.id)]
 
+  //Toggle button style for click
+  this.toggleBtnStyle(buttonClicked.Id)
+
   //If "Clear" is clicked
   if(buttonClicked.Id === "clear"){
     console.log("Clear was clicked")
     this.setState({
       inputQueue: [],
-      currentInput: [],
+      currentInput: [0],
       currentOperator: "",
       result: "",
-      style: clearActiveStyle,
     })
-    setTimeout(() => this.setState({
-      style: clearInactiveStyle
-    }),100)
   }
   
-  //If a number or decimal is clicked
-  else if(buttonClicked.hasOwnProperty("Number") || buttonClicked.Id === "decimal") {
+  //If a number is clicked
+  else if(buttonClicked.hasOwnProperty("Number")) {
 
   console.log(`${buttonClicked.Id} was clicked`) //Log button ID
   
-  //If inputQueue ends with an operator start new number
-  if(endingOperator.test(this.state.inputQueue)){
+  //If inputQueue starts with a zero OR currentInput ends with an operator start new number
+  if(endingOperator.test(this.state.inputQueue.join("")) || startingZero.test(this.state.currentInput.join(""))){
   this.setState({
     currentInput: [buttonClicked.Display],
   })
@@ -76,12 +96,20 @@ class App extends React.Component {
     inputQueue: [...state.inputQueue, buttonClicked.Display],
     style: activeStyle
   }))
-  setTimeout(() => this.setState({
-    style: inactiveStyle
-  }),100)
   this.setState(state => {
     console.log(`The current input is ${state.currentInput.join("")}`)
   })
+}
+
+//If decimal is clicked
+else if(buttonClicked.Id === "decimal"){
+  console.log(`${buttonClicked.Id} was clicked`)
+  if (!multDecimals.test(this.state.currentInput.join(""))){
+    this.setState(state => ({
+      currentInput: [...state.currentInput, buttonClicked.Display],
+      inputQueue: [...state.inputQueue, buttonClicked.Display],
+    }))
+  }
 }
 
 //If "Equals" is clicked
@@ -94,15 +122,22 @@ else if(buttonClicked.Id === "equals"){
       currentInput: [state.result],
       style: activeStyle
     }))
-    setTimeout(() => this.setState({
-      style: inactiveStyle
-    }),100)
 }
 
 //If an operator is clicked
 else {
+  this.setState(state => {
+    console.log(`Current operator is ${state.currentOperator}`);
+  })
 
-  this.runCalculation();
+  if(operatorsWithNegative.test(this.state.inputQueue)){
+    this.setState(state => ({
+      inputQueue: state.inputQueue.slice(0,state.inputQueue.length - 1),
+      currentOperator: buttonClicked.Display
+    }))
+  } else {
+    this.runCalculation();
+  }
 
   //Append operator to inputQueue and display the current result
   this.setState(state => ({
@@ -111,10 +146,6 @@ else {
     currentInput: [state.result],
     style: activeStyle
   }))
-  //Log the current operator & result
-  this.setState(state => {
-    console.log(`Current operator is ${state.currentOperator}`);
-  })
   setTimeout(() => this.setState({
     style: inactiveStyle
   }),100)
@@ -131,25 +162,27 @@ runCalculation(){
   
 //If there was a previous calculation, perform corresponding operation
   else {
-    if(this.state.currentOperator === "+"){
-      this.setState(state => ({
-        result: state.result + parseFloat(state.currentInput.join("")),
-      }))
-    }
-    else if(this.state.currentOperator === "-"){
-      this.setState(state => ({
-        result: state.result - parseFloat(state.currentInput.join("")),
-      }))
-    }
-    else if(this.state.currentOperator === "*"){
-      this.setState(state => ({
-        result: state.result * parseFloat(state.currentInput.join("")),
-      }))
-    }
-    else if(this.state.currentOperator === "/"){
-      this.setState(state => ({
-        result: state.result / parseFloat(state.currentInput.join("")),
-      }))
+    switch(this.state.currentOperator){
+      case "+":
+        this.setState(state => ({
+          result: state.result + parseFloat(state.currentInput.join("")),
+        }))
+      break;
+      case "-":
+       this.setState(state => ({
+         result: state.result - parseFloat(state.currentInput.join("")),
+        }))
+      break;
+      case "*":
+        this.setState(state => ({
+          result: state.result * parseFloat(state.currentInput.join("")),
+        }))
+      break;
+      case "/":
+        this.setState(state => ({
+         result: state.result / parseFloat(state.currentInput.join("")),
+        }))
+      break;
     }
   }
   this.setState(state => {
