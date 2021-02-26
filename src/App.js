@@ -49,7 +49,8 @@ class App extends React.Component {
   }
   handleClick(e){
   const endingOperator = /(\+|\-|\*|\/)$/gm;
-  const operatorsWithNegative = /(\+|\-\-+|\*|\/)/gm;
+  const multipleOperators = /(\+|\-|\*|\/)((\+|\*|\/)|(\-\D+))$/gm;
+  const endingNegative = /\d*(\+|\-|\*|\/)$/gm
   const startingZero = /^0/gm;
   const multDecimals = /\./gm;
 
@@ -82,10 +83,10 @@ class App extends React.Component {
 
   //If currentInput is at initialized state
   if(startingZero.test(this.state.currentInput)){
-    this.setState({
+    this.setState(state => ({
       currentInput: [buttonClicked.Display],
       inputQueue: [buttonClicked.Display]
-    })
+    }))
   }
   
   //Else if inputQueue ends with an operator
@@ -96,7 +97,8 @@ class App extends React.Component {
         inputQueue: [...state.inputQueue, buttonClicked.Display]
       }))
     }
-}
+  }
+
   //Else append to current number
   else {
   this.setState(state => ({
@@ -104,10 +106,6 @@ class App extends React.Component {
     inputQueue: [...state.inputQueue, buttonClicked.Display]
   }))
 }
-
-/*this.setState(state => ({
-  inputQueue: [...state.inputQueue, buttonClicked.Display]
-}))*/
   this.setState(state => {
     console.log(`The current input is ${state.currentInput.join("")}`)
   })
@@ -126,31 +124,52 @@ else if(buttonClicked.Id === "decimal"){
 
 //If "Equals" is clicked
 else if(buttonClicked.Id === "equals"){
-  this.runCalculation();
+  if(!endingOperator.test(this.state.inputQueue.join(""))){
+      this.runCalculation();
+  }
   console.log("Equals was clicked")
     this.setState(state => ({
       currentOperator: "",
-      inputQueue: [...state.inputQueue, buttonClicked.Display, state.result],
+      inputQueue: [state.result],
       currentInput: [state.result],
-      style: activeStyle
     }))
 }
 
 //If an operator is clicked
 else {
+    //If inputQueue doesn't end with an operator
+    if(!endingOperator.test(this.state.inputQueue.join(""))){
+      this.runCalculation();
+      this.setState(state => ({
+        currentInput: [state.result],
+        currentOperator: buttonClicked.Display
+      }))
+    }
+    //Else if it matches a negative number pattern
+    else if(endingNegative.test(this.state.inputQueue.join(""))) {
+      console.log(`Ending negative test is ${endingNegative.test(this.state.inputQueue.join(""))}`)
+      if(buttonClicked.Id === "subtract"){
+        this.setState({
+          currentInput: [buttonClicked.Display],
+        })
+      } else {
+        this.setState({
+          currentOperator: buttonClicked.Display
+        })
+      }
+    }
+    if(!multipleOperators.test(this.state.inputQueue)){
+    this.setState(state => ({
+      inputQueue: [...state.inputQueue, buttonClicked.Display],
+    }))
+  }
+  }
   this.setState(state => {
     console.log(`Current operator is ${state.currentOperator}`);
   })
-
-  this.runCalculation();
-
-  //Append operator to inputQueue and display the current result
-  this.setState(state => ({
-    currentOperator: buttonClicked.Display,
-    inputQueue: [...state.inputQueue, buttonClicked.Display],
-    currentInput: [state.result],
-  }))
-}
+  this.setState(state => {
+    console.log(`Current result is ${state.result}`)
+  })
 }
 runCalculation(){
 //On first run set result equal to currentInput
@@ -185,9 +204,6 @@ runCalculation(){
       break;
     }
   }
-  this.setState(state => {
-    console.log(`Current result is ${state.result}`)
-  })
 }
   render(){
   return (
