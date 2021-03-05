@@ -183,15 +183,46 @@ class App extends React.Component {
         currentOperator: buttonClicked.Display,
         inputQueue: [...state.inputQueue, buttonClicked.Display]
       }))
-      /*If inputQueue doesn't end with an operator
-      if (!endingOperator.test(this.state.inputQueue.join(""))) {
-        this.runCalculation();
-        this.setState((state) => ({
-          currentInput: [state.result],
-          currentOperator: buttonClicked.Display,
-          inputQueue: [...state.inputQueue, buttonClicked.Display]
-        }));
-      }*/
+    }
+    this.setState((state) => {
+      console.log(`Current operator is ${state.currentOperator}`);
+    });
+    this.setState((state) => {
+      console.log(`Current result is ${state.result}`);
+    });
+  }
+  runCalculation() {
+    //On first run set result equal to currentInput
+    if (this.state.result === "") {
+      this.setState((state) => ({
+        result: parseFloat(state.currentInput.join(""))
+      }));
+    }
+
+    //If there was a previous calculation, perform corresponding operation
+    else {
+      switch (this.state.currentOperator) {
+        case "+":
+          this.setState((state) => ({
+            result: state.result + parseFloat(state.currentInput.join(""))
+          }));
+          break;
+        case "-":
+          this.setState((state) => ({
+            result: state.result - parseFloat(state.currentInput.join(""))
+          }));
+          break;
+        case "*":
+          this.setState((state) => ({
+            result: state.result * parseFloat(state.currentInput.join(""))
+          }));
+          break;
+        case "/":
+          this.setState((state) => ({
+            result: state.result / parseFloat(state.currentInput.join(""))
+          }));
+          break;
+      }
     }
     this.setState((state) => {
       console.log(`Current operator is ${state.currentOperator}`);
