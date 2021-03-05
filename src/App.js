@@ -59,7 +59,8 @@ class App extends React.Component {
   handleClick(e) {
     const endingOperator = /[+\-*/]$/gm;
     const startingZero = /^0/gm;
-    const endingNumAndOperator = /\d+[+\-*/]$/gm;
+    const endingNegative = /\d+[+\-*/]{1}-$/gm;
+    const endingNumAndOperator = /\d+[+\-*/]{1}$/gm;
     const hasDecimal = /\./gm;
 
     //Set active button for style condition in Interface component
@@ -101,10 +102,10 @@ class App extends React.Component {
         if (endingOperator.test(this.state.inputQueue.join(""))) {
           //If button clicked was NOT zero
           if (buttonClicked.Id !== "zero") {
-            //If currentInput starts with a Negative
-            if(this.state.currentInput[0] === "-"){
+            //If inputQueue ends with a Negative
+            if(endingNegative.test(this.state.inputQueue.join(""))){
               this.setState(state => ({
-                currentInput: [...state.currentInput, buttonClicked.Display],
+                currentInput: ["-", buttonClicked.Display],
                 inputQueue: [...state.inputQueue, buttonClicked.Display]
               }))
             } else {this.setState((state) => ({
@@ -155,33 +156,28 @@ class App extends React.Component {
 
     //If an operator is clicked
     else {
-      //If inputQueue ends with an operator
-      if(endingOperator.test(this.state.inputQueue.join(""))){
-        //If subtract was clicked
+      //If inputQueue does not end with an operator
+      if(!endingOperator.test(this.state.inputQueue.join(""))){
+        this.runCalculation();
+        this.setState(state => ({
+          currentOperator: buttonClicked.Display
+        }))
+      }
+      else {
         if(buttonClicked.Id === "subtract"){
-          //If inputQueue ends with a number followed by an operator
-          if(endingNumAndOperator.test(this.state.inputQueue.join(""))){
+          if(!endingNumAndOperator.test(this.state.inputQueue.join(""))){
             this.setState({
-              currentInput: [buttonClicked.Display]
+              currentOperator: buttonClicked.Display
             })
           } else {
-            this.setState(state => ({
-              currentInput: [state.result]
-            }))
+            this.setState({
+              currentOperator: buttonClicked.Display
+            })
           }
         }
       }
-      
-      //
-      else {
-        this.runCalculation();
-        this.setState(state => ({
-          currentInput: [state.result],
-        }));
-      }
       this.setState(state => ({
-        currentOperator: buttonClicked.Display,
-        inputQueue: [...state.inputQueue, buttonClicked.Display]
+        inputQueue: [...state.inputQueue, buttonClicked.Display],
       }))
     }
     this.setState((state) => {
@@ -230,40 +226,6 @@ class App extends React.Component {
     this.setState((state) => {
       console.log(`Current result is ${state.result}`);
     });
-  }
-  runCalculation() {
-    //On first run set result equal to currentInput
-    if (this.state.result === "") {
-      this.setState((state) => ({
-        result: parseFloat(state.currentInput.join(""))
-      }));
-    }
-
-    //If there was a previous calculation, perform corresponding operation
-    else {
-      switch (this.state.currentOperator) {
-        case "+":
-          this.setState((state) => ({
-            result: state.result + parseFloat(state.currentInput.join(""))
-          }));
-          break;
-        case "-":
-          this.setState((state) => ({
-            result: state.result - parseFloat(state.currentInput.join(""))
-          }));
-          break;
-        case "*":
-          this.setState((state) => ({
-            result: state.result * parseFloat(state.currentInput.join(""))
-          }));
-          break;
-        case "/":
-          this.setState((state) => ({
-            result: state.result / parseFloat(state.currentInput.join(""))
-          }));
-          break;
-      }
-    }
   }
   render() {
     return (
