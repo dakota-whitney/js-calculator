@@ -160,7 +160,8 @@ class App extends React.Component {
       if(!endingOperator.test(this.state.inputQueue.join(""))){
         this.runCalculation();
         this.setState(state => ({
-          currentOperator: buttonClicked.Display
+          currentOperator: buttonClicked.Display,
+          currentInput: [state.result]
         }))
       }
       else {
@@ -169,11 +170,12 @@ class App extends React.Component {
             this.setState({
               currentOperator: buttonClicked.Display
             })
-          } else {
-            this.setState({
-              currentOperator: buttonClicked.Display
-            })
           }
+        }
+        if(endingNegative.test(this.state.inputQueue.join(""))){
+          this.setState({
+            currentOperator: buttonClicked.Display
+          })
         }
       }
       this.setState(state => ({
